@@ -1,0 +1,7 @@
+version: "1.0.0"
+description: "ESP-IDF component for MS5607 Barometer"
+maintainers:
+  - "João Salles"
+
+documentation: "https://github.com/joaoSallesr/esp_ms5607"
+repository: "https://github.com/joaoSallesr/esp_ms5607"
