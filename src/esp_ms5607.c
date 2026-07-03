@@ -210,14 +210,44 @@ esp_err_t ms5607_read_adc(ms5607_handle_t handle, uint32_t *out_pressure, uint32
     return err;
 }
 
-esp_err_t ms5607_temperature_compensation(ms5607_handle_t handle, uint32_t raw_temperature, uint32_t *out_temperature) {
-    esp_err_t err = ESP_OK;
+void ms5607_temperature_compensation(ms5607_handle_t handle, uint32_t raw_temperature, int32_t *out_temperature) {
+    int32_t dT;
+    int32_t temp;
 
-    return err;
+    uint16_t c5 = handle->dev_config.calibration.temperature_reference;
+    uint16_t c6 = handle->dev_config.calibration.temperature_coefficient;
+
+    dT = (int32_t)raw_temperature - ((int32_t)c5 << 8);
+
+    temp = 2000 + (((int32_t)dT * c6) << 23);
+
+    *out_temperature = temp;
 }
 
-esp_err_t ms5607_pressure_compensation(ms5607_handle_t handle, uint32_t raw_pressure, uint32_t *out_pressure) {
-    esp_err_t err = ESP_OK;
+void ms5607_compensation(ms5607_handle_t handle, uint32_t raw_pressure, uint32_t raw_temperature,
+                         int32_t *out_temperature, int32_t *out_pressure) {
+    int64_t dT;
+    int64_t OFF;
+    int64_t SENS;
 
-    return err;
+    const int64_t D1 = raw_pressure;
+    const int64_t D2 = raw_temperature;
+
+    const int64_t c1 = handle->dev_config.calibration.pressure_sensitivty;
+    const int64_t c2 = handle->dev_config.calibration.pressure_offset;
+    const int64_t c3 = handle->dev_config.calibration.temperature_sensitivity;
+    const int64_t c4 = handle->dev_config.calibration.temperature_offset;
+    const int64_t c5 = handle->dev_config.calibration.temperature_reference;
+    const int64_t c6 = handle->dev_config.calibration.temperature_coefficient;
+
+    /* Temperature compensation */
+    dT = D2 - (c5 << 8);
+
+    *out_temperature = 2000 + (int32_t)((dT * c6) >> 23);
+
+    /* Pressure compensation */
+    OFF  = (c2 << 17) + ((c4 * dT) >> 6);
+    SENS = (c1 << 16) + ((c3 * dT) >> 7);
+
+    *out_pressure = (int32_t)((((D1 * SENS) >> 21) - OFF) >> 15);
 }

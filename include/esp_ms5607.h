@@ -171,5 +171,5 @@ esp_err_t ms5607_start_conversion(ms5607_handle_t handle, ms5607_type_t type);
  */
 esp_err_t ms5607_read_adc(ms5607_handle_t handle, uint32_t *out_pressure, uint32_t *out_temperature);
 
-esp_err_t ms5607_temperature_compensation(ms5607_handle_t handle, uint32_t raw_temperature, uint32_t *out_temperature);
-esp_err_t ms5607_pressure_compensation(ms5607_handle_t handle, uint32_t raw_pressure, uint32_t *out_pressure);
+void ms5607_compensation(ms5607_handle_t handle, uint32_t raw_pressure, uint32_t raw_temperature,
+                         int32_t *out_temperature, int32_t *out_pressure);
