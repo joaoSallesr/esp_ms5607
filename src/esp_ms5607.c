@@ -2,6 +2,11 @@
 
 static const char *TAG = "MS5607";
 
+static const ms5607_osr_config_t osr_config[] = {
+    {0x00, MS5607_OSR256_US},  {0x02, MS5607_OSR512_US},  {0x04, MS5607_OSR1024_US},
+    {0x06, MS5607_OSR2048_US}, {0x08, MS5607_OSR4096_US},
+};
+
 static inline void cs_low(ms5607_handle_t handle) { gpio_set_level(handle->dev_config.cs, LOW); }
 
 static inline void cs_high(ms5607_handle_t handle) { gpio_set_level(handle->dev_config.cs, HIGH); }
@@ -115,12 +120,12 @@ esp_err_t ms5607_init(const ms5607_config_t *ms5607_config, ms5607_handle_t *out
 
     /* MS5607 read PROM values */
     ms5607_calibration_t calibration_values;
-    ms5670_read_prom(handle, MS5607_PRM_ADD1, &calibration_values.pressure_sensitivty);
-    ms5670_read_prom(handle, MS5607_PRM_ADD2, &calibration_values.pressure_offset);
-    ms5670_read_prom(handle, MS5607_PRM_ADD3, &calibration_values.temperature_sensitivity);
-    ms5670_read_prom(handle, MS5607_PRM_ADD4, &calibration_values.temperature_offset);
-    ms5670_read_prom(handle, MS5607_PRM_ADD5, &calibration_values.temperature_reference);
-    ms5670_read_prom(handle, MS5607_PRM_ADD6, &calibration_values.temperature_coefficient);
+    ms5607_read_prom(handle, MS5607_PRM_ADD1, &calibration_values.pressure_sensitivty);
+    ms5607_read_prom(handle, MS5607_PRM_ADD2, &calibration_values.pressure_offset);
+    ms5607_read_prom(handle, MS5607_PRM_ADD3, &calibration_values.temperature_sensitivity);
+    ms5607_read_prom(handle, MS5607_PRM_ADD4, &calibration_values.temperature_offset);
+    ms5607_read_prom(handle, MS5607_PRM_ADD5, &calibration_values.temperature_reference);
+    ms5607_read_prom(handle, MS5607_PRM_ADD6, &calibration_values.temperature_coefficient);
 
     /* Save calibration values */
     handle->dev_config.calibration = calibration_values;
@@ -132,5 +137,38 @@ err_handle:
     if (handle->spi_handle)
         spi_bus_remove_device(handle->spi_handle);
     free(handle);
+    return err;
+}
+
+esp_err_t ms5607_start_conversion(ms5607_handle_t handle, ms5607_type_t type) {
+    esp_err_t err;
+
+    uint8_t  osr;
+    uint8_t  cmd;
+    uint32_t delay_us;
+
+    if (type == MS5607_PRESSURE) {
+        osr = handle->dev_config.pressure_osr;
+        cmd = MS5607_CMD_D1 | osr_config[osr].osr;
+    } else {
+        osr = handle->dev_config.temperature_osr;
+        cmd = MS5607_CMD_D2 | osr_config[osr].osr;
+    }
+
+    delay_us = osr_config[osr].delay_us;
+
+    xSemaphoreTake(handle->dev_config.spi_mutex, portMAX_DELAY);
+    spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY);
+    cs_low(handle);
+
+    err = ms5607_send_cmd(handle, cmd, NULL, 1);
+    if (err != ESP_OK)
+        ESP_LOGE(TAG, "Failed to start %s conversion", type == MS5607_PRESSURE ? "pressure" : "temperature");
+
+    ets_delay_us(delay_us);
+    cs_high(handle);
+    spi_device_release_bus(handle->spi_handle);
+    xSemaphoreGive(handle->dev_config.spi_mutex);
+
     return err;
 }

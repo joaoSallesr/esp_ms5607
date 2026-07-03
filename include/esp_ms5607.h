@@ -34,24 +34,10 @@
 /*
  * MS5607 commands
  */
-#define MS5607_CMD_READ    0x00 /* returns 24 bit result */
-#define MS5607_CMD_RESET   0x1E
-#define MS5607_CMD_D1_256  0x40 /* initiate uncompensated pressure conversion with selected OSR*/
-#define MS5607_CMD_D1_512  0x42
-#define MS5607_CMD_D1_1024 0x44
-#define MS5607_CMD_D1_2048 0x46
-#define MS5607_CMD_D1_4096 0x48
-#define MS5607_CMD_D2_256  0x50 /* initiate uncompensated temperature conversion with selected OSR*/
-#define MS5607_CMD_D2_512  0x52
-#define MS5607_CMD_D2_1024 0x54
-#define MS5607_CMD_D2_2048 0x56
-#define MS5607_CMD_D2_4096 0x58
-
-/* After the conversion, using ADC read command the result is clocked out with the MSB first. If the conversion is not
-executed before the ADC read command, or the ADC read command is repeated, it will give 0 as the output result.
-If the ADC read command is sent during conversion the result will be 0, the conversion will not stop and the final
-result will be wrong. Conversion sequence sent during the already started conversion process will yield incorrect
-result as well.*/
+#define MS5607_CMD_READ  0x00 /* returns 24 bit result */
+#define MS5607_CMD_RESET 0x1E
+#define MS5607_CMD_D1    0x40 /* initiate uncompensated pressure conversion with selected OSR*/
+#define MS5607_CMD_D2    0x50 /* initiate uncompensated temperature conversion with selected OSR*/
 
 /*
  * MS5607 PROM calibration commands - returns 16 bit result
@@ -66,15 +52,28 @@ result as well.*/
 #define MS5607_PRM_ADD7 0xAE /* Serial code and CRC */
 
 /*
+ * MS5607 reading type
+ */
+typedef enum {
+    MS5607_PRESSURE    = 0x01,
+    MS5607_TEMPERATURE = 0x03,
+} ms5607_type_t;
+
+/*
  * MS5607 Pressure Oversampling Rate
  */
 typedef enum {
-    MS5607_OSR_256  = 0x01,
-    MS5607_OSR_512  = 0x03,
-    MS5607_OSR_1024 = 0x05,
-    MS5607_OSR_2048 = 0x07,
-    MS5607_OSR_4096 = 0x09,
+    MS5607_OSR_256  = 0,
+    MS5607_OSR_512  = 1,
+    MS5607_OSR_1024 = 2,
+    MS5607_OSR_2048 = 3,
+    MS5607_OSR_4096 = 4,
 } ms5607_osr_t;
+
+typedef struct {
+    uint8_t  osr;
+    uint16_t delay_us;
+} ms5607_osr_config_t;
 
 /*
  * MS5607 calibration coefficients (PROM 1-6 addresses)
@@ -153,7 +152,15 @@ esp_err_t ms5607_read_prom(ms5607_handle_t handle, const uint8_t address, uint16
  */
 esp_err_t ms5607_init(const ms5607_config_t *ms5607_config, ms5607_handle_t *out_handle);
 
-esp_err_t ms5607_start_conversion(ms5607_handle_t handle, const uint8_t cmd);
+/**
+ * @brief Start conversion using selected OSR.
+ *
+ * @param [in] handle MS5607 device handle.
+ * @param [in] type Conversion type.
+ * @return esp_err_t ESP_OK on success
+ */
+esp_err_t ms5607_start_conversion(ms5607_handle_t handle, ms5607_type_t type);
+
 esp_err_t ms5607_read_adc(ms5607_handle_t handle);
 
 esp_err_t ms5607_temperature_calculation(ms5607_handle_t handle);
