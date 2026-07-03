@@ -161,7 +161,15 @@ esp_err_t ms5607_init(const ms5607_config_t *ms5607_config, ms5607_handle_t *out
  */
 esp_err_t ms5607_start_conversion(ms5607_handle_t handle, ms5607_type_t type);
 
-esp_err_t ms5607_read_adc(ms5607_handle_t handle);
+/**
+ * @brief Returns pressure and temperature readings.
+ *
+ * @param [in] handle MS5607 device handle.
+ * @param [out] out_pressure Uncompensated pressure.
+ * @param [out] out_temperature Uncompensated temperature.
+ * @return esp_err_t ESP_OK on success
+ */
+esp_err_t ms5607_read_adc(ms5607_handle_t handle, uint32_t *out_pressure, uint32_t *out_temperature);
 
-esp_err_t ms5607_temperature_calculation(ms5607_handle_t handle);
-esp_err_t ms5607_pressure_compensation(ms5607_handle_t handle);
+esp_err_t ms5607_temperature_compensation(ms5607_handle_t handle, uint32_t raw_temperature, uint32_t *out_temperature);
+esp_err_t ms5607_pressure_compensation(ms5607_handle_t handle, uint32_t raw_pressure, uint32_t *out_pressure);

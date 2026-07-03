@@ -172,3 +172,52 @@ esp_err_t ms5607_start_conversion(ms5607_handle_t handle, ms5607_type_t type) {
 
     return err;
 }
+
+esp_err_t ms5607_read_adc(ms5607_handle_t handle, uint32_t *out_pressure, uint32_t *out_temperature) {
+    esp_err_t err;
+
+    /* Pressure sequence */
+    err = ms5607_start_conversion(handle, MS5607_PRESSURE);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to start conversion");
+        return err;
+    }
+
+    uint8_t rx[3];
+    err = ms5607_send_cmd(handle, MS5607_CMD_READ, rx, 4);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to read pressure");
+        return err;
+    }
+
+    *out_pressure = ((uint16_t)rx[1] << 16) | ((uint16_t)rx[2] << 8) | rx[3];
+
+    /* Temperature sequence */
+    err = ms5607_start_conversion(handle, MS5607_TEMPERATURE);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to start conversion");
+        return err;
+    }
+
+    err = ms5607_send_cmd(handle, MS5607_CMD_READ, rx, 4);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to read temperature");
+        return err;
+    }
+
+    *out_temperature = ((uint16_t)rx[1] << 16) | ((uint16_t)rx[2] << 8) | rx[3];
+
+    return err;
+}
+
+esp_err_t ms5607_temperature_compensation(ms5607_handle_t handle, uint32_t raw_temperature, uint32_t *out_temperature) {
+    esp_err_t err = ESP_OK;
+
+    return err;
+}
+
+esp_err_t ms5607_pressure_compensation(ms5607_handle_t handle, uint32_t raw_pressure, uint32_t *out_pressure) {
+    esp_err_t err = ESP_OK;
+
+    return err;
+}
