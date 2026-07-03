@@ -210,20 +210,6 @@ esp_err_t ms5607_read_adc(ms5607_handle_t handle, uint32_t *out_pressure, uint32
     return err;
 }
 
-void ms5607_temperature_compensation(ms5607_handle_t handle, uint32_t raw_temperature, int32_t *out_temperature) {
-    int32_t dT;
-    int32_t temp;
-
-    uint16_t c5 = handle->dev_config.calibration.temperature_reference;
-    uint16_t c6 = handle->dev_config.calibration.temperature_coefficient;
-
-    dT = (int32_t)raw_temperature - ((int32_t)c5 << 8);
-
-    temp = 2000 + (((int32_t)dT * c6) << 23);
-
-    *out_temperature = temp;
-}
-
 void ms5607_compensation(ms5607_handle_t handle, uint32_t raw_pressure, uint32_t raw_temperature,
                          int32_t *out_temperature, int32_t *out_pressure) {
     int64_t dT;
