@@ -115,15 +115,46 @@ struct ms5607_context_t {
 typedef struct ms5607_context_t  ms5607_context_t;
 typedef struct ms5607_context_t *ms5607_handle_t;
 
+/**
+ * @brief MS5607 SPI transaction helper.
+ *
+ * @param [in] handle MS5607 device handle.
+ * @param [in] cmd MS5607 command byte.
+ * @param [out] rx Transaction result.
+ * @param [in] len Length of transaction.
+ * @return esp_err_t ESP_OK on success.
+ */
 esp_err_t ms5607_send_cmd(ms5607_handle_t handle, const uint8_t cmd, uint8_t *rx, size_t len);
 
+/**
+ * @brief Issues system reset command for the MS5607.
+ *
+ * @param [in] handle MS5607 device handle.
+ * @return esp_err_t ESP_OK on success.
+ */
 esp_err_t ms5607_reset(ms5607_handle_t handle);
-esp_err_t ms5670_read_prom(ms5607_handle_t handle, const uint8_t address, uint16_t *out_val);
-esp_err_t ms5607_read(void);
 
+/**
+ * @brief Reads calibration value from PROM.
+ *
+ * @param [in] handle MS5607 device handle.
+ * @param [in] address PROM address.
+ * @param [out] out_val Calibration value.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ms5607_read_prom(ms5607_handle_t handle, const uint8_t address, uint16_t *out_val);
+
+/**
+ * @brief Initializes an MS5607 device using device configuration.
+ *
+ * @param [in] ms5607_config MS5607 device configuration.
+ * @param [out] out_handle MS5607 device handle.
+ * @return esp_err_t ESP_OK on success
+ */
 esp_err_t ms5607_init(const ms5607_config_t *ms5607_config, ms5607_handle_t *out_handle);
 
-esp_err_t ms5607_start_conversion(void);
+esp_err_t ms5607_start_conversion(ms5607_handle_t handle, const uint8_t cmd);
+esp_err_t ms5607_read_adc(ms5607_handle_t handle);
 
-esp_err_t ms5607_temperature_calculation(void);
-esp_err_t ms5607_pressure_compensation(void);
+esp_err_t ms5607_temperature_calculation(ms5607_handle_t handle);
+esp_err_t ms5607_pressure_compensation(ms5607_handle_t handle);
