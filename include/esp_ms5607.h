@@ -145,20 +145,11 @@ esp_err_t ms5607_reset(ms5607_handle_t handle);
 esp_err_t ms5607_read_prom(ms5607_handle_t handle, const uint8_t address, uint16_t *out_val);
 
 /**
- * @brief Initializes an MS5607 device using device configuration.
- *
- * @param [in] ms5607_config MS5607 device configuration.
- * @param [out] out_handle MS5607 device handle.
- * @return esp_err_t ESP_OK on success
- */
-esp_err_t ms5607_init(const ms5607_config_t *ms5607_config, ms5607_handle_t *out_handle);
-
-/**
  * @brief Start conversion using selected OSR.
  *
  * @param [in] handle MS5607 device handle.
  * @param [in] type Conversion type.
- * @return esp_err_t ESP_OK on success
+ * @return esp_err_t ESP_OK on success.
  */
 esp_err_t ms5607_start_conversion(ms5607_handle_t handle, ms5607_type_t type);
 
@@ -168,7 +159,7 @@ esp_err_t ms5607_start_conversion(ms5607_handle_t handle, ms5607_type_t type);
  * @param [in] handle MS5607 device handle.
  * @param [out] out_pressure Uncompensated pressure.
  * @param [out] out_temperature Uncompensated temperature.
- * @return esp_err_t ESP_OK on success
+ * @return esp_err_t ESP_OK on success.
  */
 esp_err_t ms5607_read_adc(ms5607_handle_t handle, uint32_t *out_pressure, uint32_t *out_temperature);
 
@@ -179,7 +170,34 @@ esp_err_t ms5607_read_adc(ms5607_handle_t handle, uint32_t *out_pressure, uint32
  * @param [in] raw_pressure Uncompensated pressure.
  * @param [in] raw_temperature Uncompensated temperature.
  * @param [out] out_pressure Compensated pressure in Pascal.
- * @param [out] out_temperature Compensated temperature in 0.01 °C
+ * @param [out] out_temperature Compensated temperature in 0.01 °C.
  */
 void ms5607_compensation(ms5607_handle_t handle, uint32_t raw_pressure, uint32_t raw_temperature, int32_t *out_pressure,
                          int32_t *out_temperature);
+
+/**
+ * @brief Initializes an MS5607 device using device configuration.
+ *
+ * @param [in] ms5607_config MS5607 device configuration.
+ * @param [out] out_handle MS5607 device handle.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ms5607_init(const ms5607_config_t *ms5607_config, ms5607_handle_t *out_handle);
+
+/**
+ * @brief Reads and compensate pressure and temperature.
+ *
+ * @param [in] handle MS5607 device handle.
+ * @param [out] out_pressure Compensated pressure in Pascal.
+ * @param [out] out_temperature Compensated temperature in 0.01 °C.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ms5607_read(ms5607_handle_t handle, int32_t *out_pressure, int32_t *out_temperature);
+
+/**
+ * @brief Deletes MS5607 device.
+ *
+ * @param [in] handle MS5607 device handle.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ms5607_delete(ms5607_handle_t handle);
