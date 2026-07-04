@@ -1,5 +1,6 @@
 #pragma once
 
+#include <math.h>
 #include <stdint.h>
 
 #include <esp_check.h>
@@ -162,7 +163,7 @@ esp_err_t ms5607_init(const ms5607_config_t *ms5607_config, ms5607_handle_t *out
 esp_err_t ms5607_start_conversion(ms5607_handle_t handle, ms5607_type_t type);
 
 /**
- * @brief Returns pressure and temperature readings.
+ * @brief Returns raw pressure and raw temperature readings.
  *
  * @param [in] handle MS5607 device handle.
  * @param [out] out_pressure Uncompensated pressure.
@@ -171,5 +172,14 @@ esp_err_t ms5607_start_conversion(ms5607_handle_t handle, ms5607_type_t type);
  */
 esp_err_t ms5607_read_adc(ms5607_handle_t handle, uint32_t *out_pressure, uint32_t *out_temperature);
 
-void ms5607_compensation(ms5607_handle_t handle, uint32_t raw_pressure, uint32_t raw_temperature,
-                         int32_t *out_temperature, int32_t *out_pressure);
+/**
+ * @brief Returns compensated pressure and temperature.
+ *
+ * @param [in] handle MS5607 device handle.
+ * @param [in] raw_pressure Uncompensated pressure.
+ * @param [in] raw_temperature Uncompensated temperature.
+ * @param [out] out_pressure Compensated pressure in Pascal.
+ * @param [out] out_temperature Compensated temperature in 0.01 °C
+ */
+void ms5607_compensation(ms5607_handle_t handle, uint32_t raw_pressure, uint32_t raw_temperature, int32_t *out_pressure,
+                         int32_t *out_temperature);

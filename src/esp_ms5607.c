@@ -210,11 +210,17 @@ esp_err_t ms5607_read_adc(ms5607_handle_t handle, uint32_t *out_pressure, uint32
     return err;
 }
 
-void ms5607_compensation(ms5607_handle_t handle, uint32_t raw_pressure, uint32_t raw_temperature,
-                         int32_t *out_temperature, int32_t *out_pressure) {
+void ms5607_compensation(ms5607_handle_t handle, uint32_t raw_pressure, uint32_t raw_temperature, int32_t *out_pressure,
+                         int32_t *out_temperature) {
     int64_t dT;
     int64_t OFF;
     int64_t SENS;
+
+    int64_t T2;
+    int64_t OFF2;
+    int64_t SENS2;
+
+    int32_t temperature;
 
     const int64_t D1 = raw_pressure;
     const int64_t D2 = raw_temperature;
@@ -229,11 +235,31 @@ void ms5607_compensation(ms5607_handle_t handle, uint32_t raw_pressure, uint32_t
     /* Temperature compensation */
     dT = D2 - (c5 << 8);
 
-    *out_temperature = 2000 + (int32_t)((dT * c6) >> 23);
+    temperature = 2000 + (int32_t)((dT * c6) >> 23);
 
     /* Pressure compensation */
     OFF  = (c2 << 17) + ((c4 * dT) >> 6);
     SENS = (c1 << 16) + ((c3 * dT) >> 7);
 
-    *out_pressure = (int32_t)((((D1 * SENS) >> 21) - OFF) >> 15);
+    if (temperature < 2000) {
+        int64_t t = temperature - 2000;
+
+        T2    = (dT * dT) >> 31;
+        OFF2  = (61 * t * t) >> 4;
+        SENS2 = 2 * t * t;
+
+        if (temperature < -1500) {
+            int64_t t2 = temperature + 1500;
+
+            OFF2 += 15 * t2 * t2;
+            SENS2 += 8 * t2 * t2;
+        }
+
+        OFF -= OFF2;
+        SENS -= SENS2;
+        temperature -= T2;
+    }
+
+    *out_temperature = temperature;
+    *out_pressure    = (int32_t)((((D1 * SENS) >> 21) - OFF) >> 15);
 }
